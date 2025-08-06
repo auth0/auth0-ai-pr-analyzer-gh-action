@@ -1,0 +1,11 @@
+node_modules/
+
+dist/
+
+.idea/
+
+scripts/claude-code-gha-usage/.env
+
+**/coverage/
+
+.DS_Store
