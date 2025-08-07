@@ -1,6 +1,4 @@
-# Custom Amazon Bedrock Agent Action
-
-![GitHub Action](https://img.shields.io/badge/Custom%20Bedrock%20Analysis-blue)
+# AI PR Analyzer Github Action
 
 ## Example: How to Use the Claude Code Review Github Action
 
@@ -52,25 +50,6 @@ jobs:
   claude-review:
     uses: auth0/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
 ```
-
-## Configuration
-
-This workflow uses hardcoded ARNs for AWS resources. Before using, you need to update the following values in the workflow file (`.github/workflows/claude-code-review.yml`):
-
-| Configuration | Location | Description |
-|---------------|----------|-------------|
-| AWS IAM Role | Line ~157: `role-to-assume` | AWS IAM role ARN for Bedrock access |
-| Bedrock Model | Line ~173: `model` | Claude model ARN for code reviews |
-
-### Example ARN Values
-
-```yaml
-# In .github/workflows/claude-code-review.yml
-role-to-assume: arn:aws:iam::123456789012:role/auth0-github-actions-claude-role
-model: arn:aws:bedrock:us-east-1:123456789012:provisioned-model/claude-3-5-sonnet-bedrock
-```
-
-Replace `123456789012` with your AWS account ID and update the role/model names as appropriate.
 
 ## Ignoring Files and Directories
 
