@@ -31,16 +31,8 @@ jobs:
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude'))
-    runs-on: ubuntu-22.04-2cpu-8ram-75ssd
+    runs-on: ubuntu-latest
     steps:
-      - name: Debug Event Information
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "PR number: ${{ github.event.pull_request.number || github.event.issue.number }}"
-          echo "Comment body: ${{ github.event.comment.body || 'N/A' }}"
-          echo "PR body preview: ${{ github.event.pull_request.body || 'N/A' }}"
-          echo "Review body: ${{ github.event.review.body || 'N/A' }}"
-          
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -162,7 +154,7 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
-          role-to-assume: arn:aws:iam::340752820498:role/auth0-bedrock-github-actions-pr-analyzer
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-bedrock-role
           role-session-name: bedrock-pr-analyzer
           aws-region: us-east-1
 
@@ -178,7 +170,7 @@ jobs:
       - name: Claude Code Action with Bedrock
         uses: anthropics/claude-code-action@950bdc01df83ec90f3e4aad85504e8e84b20a035 #v0.6.11
         with:
-          model: arn:aws:bedrock:us-east-1:340752820498:application-inference-profile/mxelqitzlze2
+          model: arn:aws:bedrock:us-east-1:123456789012:provisioned-model/claude-3-5-sonnet-example
           use_bedrock: "true"
           github_token: ${{ secrets.GITHUB_TOKEN }}
           use_sticky_comment: "true"
@@ -199,7 +191,7 @@ jobs:
               1. First, understand the PR context:
                 - Run Bash(cat diff.txt) to get the diff
                 - Read specific files using the Read tool for deeper analysis
-              2. Read `./.github/copilot-instructions.md` to understand the context and architecture of this project before the review.
+              2. Read `./.github/copilot-instructions.md` (located in current directory, DON'T READ `/.github/instructions.md`) to understand the context and architecture of this project before the review.
               3. Start a review: Use `mcp__github__create_pending_pull_request_review` to begin a pending review
               4. Add inline comments:
                 - Use mcp__github__add_comment_to_pending_review for each issue or suggestion
@@ -224,34 +216,108 @@ jobs:
                   - For single-line comments: Replace ONLY that line
                   - For multi-line comments: Replace ONLY the lines in the range
                   - Do NOT include surrounding context or function signatures
+                  - IMPORTANT: If the suggestion line should be kept in the code, include it in the suggestion block
                   - IMPORTANT: Do NOT suggest changes that span beyond the commented lines
-                  - IMPORTANT: Keep the indentation consistent! Do not remove indentation!
                 
-                    <code_example>
-                    18-> function processUser(user) {
-                    19->    if (!user) throw new Error('Invalid user');
-                    20->    var name = user.name;
-                    21-> }
-                    </code_example>
+                IMPORTANT: Keep the indentation consistent! Do not remove indentation!
+                IMPORTANT: When writing a suggestion block, ALWAYS make sure that replacing the specific line(s) with the suggestion will keep the code compiling!!!
+                
+                <code_example>
+                18-> function processUser(user) {
+                19->    if (!user) throw new Error('Invalid user');
+                20->    const name = user.name;
+                21->    saveName(name);
+                22-> }
+                </code_example>
 
-                    Suggestion: change `var` to `const` in line 20
+                <suggestion>
+                  Suggestion: Add a log when there is no user
+                  CORRECT: Single-line comment in line 19
 
-                    WRONG (suggestion spans beyond commented line):
-                    \`\`\`suggestion
-                    function processUser(user) {
-                        if (!user) throw new Error('Invalid user');
+                  WRONG (suggestion spans beyond commented line):
+                  \`\`\`suggestion
+                  function processUser(user) {
+                      if (!user) {
+                        console.log('No user provided');
+                        throw new Error('Invalid user');
+                      }
+                      const name = user.name;
+                  \`\`\`
+
+                  WRONG (This will remove the if and throw clauses):
+                  \`\`\`suggestion
+                        console.log('No user provided');
+                  \`\`\`
+
+                  WRONG (Forget to close the if statement):
+                  \`\`\`suggestion
+                      if (!user) {
+                        console.log('No user provided');
+                  \`\`\`
+
+                  WRONG (Removes indentation):
+                  \`\`\`suggestion
+                    if (!user) {
+                      console.log('No user provided');
+                      throw new Error('Invalid user');
+                    }
+                  \`\`\`
+
+                  CORRECT:
+                  \`\`\`suggestion
+                      if (!user) {
+                        console.log('No user provided');
+                        throw new Error('Invalid user');
+                      }
+                  \`\`\`
+                </suggestion>
+
+                <suggestion>
+                  Suggestion: Add a log after getting user name
+                  CORRECT: Single-line comment in line 20
+
+                  WRONG (suggestion spans beyond commented line):
+                  \`\`\`suggestion
+                      if (!user) throw new Error('Invalid user');
+                      const name = user.name;
+                      console.log('User name:', name);
+                  \`\`\`
+
+                  WRONG (This will remove `const name = user.name`):
+                  \`\`\`suggestion
+                      console.log('User name:', name);
+                  \`\`\`
+
+                  CORRECT:
+                  \`\`\`suggestion
+                      const name = user.name;
+                      console.log('User name:', name);
+                  \`\`\`
+                </suggestion>
+
+                <suggestion>
+                  Suggestion: Move user processing to an else statement
+                  CORRECT: Multi-line comment between line 19 and 21
+                  WRONG: Single-line comment
+
+                  WRONG (don't add bracket to if clause):
+                  \`\`\`suggestion
+                      } else {
                         const name = user.name;
-                    \`\`\`
+                        saveName(name);
+                      }
+                  \`\`\`
 
-                    WRONG (removes indentation):
-                    \`\`\`suggestion
-                    const name = user.name;
-                    \`\`\`
-
-                    CORRECT (keeps indentation):
-                    \`\`\`suggestion
+                  CORRECT:
+                  \`\`\`suggestion
+                      if (!user) {
+                        throw new Error('Invalid user');
+                      } else {
                         const name = user.name;
-                    \`\`\`
+                        saveName(name);
+                      }
+                  \`\`\`
+                </suggestion>
 
                 For validation suggestions, comment on the function declaration line or create separate comments for each concern.
               5. Submit your review:
