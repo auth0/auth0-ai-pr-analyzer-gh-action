@@ -2,6 +2,7 @@ AI PR Analyzer GitHub Action
 Copyright 2025 Okta, Inc.
 
 This product includes software developed at Auth0 (https://auth0.com/).
+This product includes software developed by Amazon.com, Inc. or its affiliates.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,11 +18,15 @@ limitations under the License.
 
 ================================================================================
 
-This project incorporates components from the Claude Code GitHub Actions.
+This product incorporates the following components licensed under the MIT License:
 
-The Claude Code GitHub Actions are licensed under the MIT License.
+- actions/checkout (Copyright (c) 2019 GitHub, Inc.)
+- actions/setup-python (Copyright (c) 2019 GitHub, Inc.)
+- Claude Code GitHub Actions (Copyright (c) Anthropic)
 
-Copyright (c) Anthropic
+---
+
+The MIT License (MIT)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
