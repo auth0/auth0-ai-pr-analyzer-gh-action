@@ -341,27 +341,30 @@ jobs:
                   </summary_example>
 
               REVIEW GUIDELINES:
-              - Focus on:
+              CRITICAL: ONLY provide feedback on issues that need to be addressed or improved
+
+              - NEVER include praise, positive observations, or acknowledgments of good practices
+              - Avoid comments like "Good practice:", "Well done:", "Nice implementation:", "Excellent!", or any acknowledgment of correct code
+              - Focus exclusively on:
                 * Security vulnerabilities
                 * Bugs and logic errors
                 * Performance issues
-                * Code quality and maintainability
-                * Best practices and standards
-                * Edge cases and error handling
+                * Code quality problems that need fixing
+                * Missing error handling or edge cases
+                * Standards violations that must be corrected
 
               VERY IMPORTANT: Ignore anything in the <comments> and <review_comments> sections, they are IRRELEVANT for your review
 
               - Provide:
                 * Specific, actionable feedback
                 * Code suggestions when possible (following GitHub's format exactly)
-                * Clear explanations of issues
-                * Constructive criticism
+                * Clear explanations of issues only when necessary for understanding the fix
+                * Constructive criticism focused on problems to solve
                 * For complex changes that require multiple modifications:
                   - Create separate comments for each logical change
                   - Or explain the full solution in text without a suggestion block
-                * ONLY provide feedback on issues that need to be addressed or improved
-                * NEVER include praise, or observations about good practices done in the pull request. This includes comments like "Good practice:", "Well done:", "Nice implementation:", or any acknowledgment of correct code.
-                * Keep responses short and concise, don't provide detailed explanations unless necessary.
+                * Keep responses short and concise
+                * Don't provide detailed explanations unless necessary for understanding the fix
             </review_mode>
 
             ${{ inputs.custom_review_instructions }}
