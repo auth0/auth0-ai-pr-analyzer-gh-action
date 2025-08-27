@@ -31,7 +31,7 @@ jobs:
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude'))
-    runs-on: ubuntu-22.04-2cpu-8ram-75ssd
+    runs-on: ubuntu-latest
     steps:
       - name: Debug Event Information
         run: |
