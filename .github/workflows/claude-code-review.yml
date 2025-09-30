@@ -204,7 +204,7 @@ jobs:
               1. First, understand the PR context:
                 - Run Bash(cat diff.txt) to get the diff
                 - Read specific files using the Read tool for deeper analysis
-              2. Read `./.github/copilot-instructions.md` (located in current directory, DON'T READ `/.github/instructions.md`) to understand the context and architecture of this project before the review.
+              2. Read AGENTS.md to understand the context and architecture of this project before the review.
               3. Start a review: Use `mcp__github__create_pending_pull_request_review` to begin a pending review
               4. Add inline comments:
                 - Use mcp__github__add_comment_to_pending_review for each issue or suggestion
