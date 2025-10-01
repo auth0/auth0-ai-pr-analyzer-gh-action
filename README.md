@@ -93,6 +93,15 @@ jobs:
         Read(__pycache__)
 ```
 
+**Allow additional tools:**
+```yaml
+jobs:
+  claude-review:
+    uses: atko-cic/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    with:
+      allowed_tools: "Bash(npm:*),Bash(yarn:*)"
+```
+
 You can also use wildcards with the star symbol:
 
 ```yaml
