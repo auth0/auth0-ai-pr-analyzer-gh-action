@@ -29,7 +29,7 @@ on:
 
 jobs:
   claude-review:
-    uses: auth0/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    uses: auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
 ```
 
 ## Usage
@@ -50,7 +50,7 @@ The AI will analyze the code changes and provide intelligent feedback.
 ```yaml
 jobs:
   claude-review:
-    uses: auth0/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    uses: auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
     with:
       custom_review_instructions: |
         When reviewing code changes, please:
@@ -74,7 +74,7 @@ For a basic setup without any custom parameters:
 ```yaml
 jobs:
   claude-review:
-    uses: auth0/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    uses: auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
 ```
 
 #### Ignoring Files and Directories
@@ -86,11 +86,20 @@ You can prevent the reviewer from reading specific files and directories by usin
 ```yaml
 jobs:
   claude-review:
-    uses: auth0/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    uses: auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
     with:
       disallowed_tools: |
         Read(build)
         Read(__pycache__)
+```
+
+**Allow additional tools:**
+```yaml
+jobs:
+  claude-review:
+    uses: auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    with:
+      allowed_tools: "Bash(npm:*),Bash(yarn:*)"
 ```
 
 You can also use wildcards with the star symbol:
@@ -98,7 +107,7 @@ You can also use wildcards with the star symbol:
 ```yaml
 jobs:
   claude-review:
-    uses: auth0/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    uses: auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
     with:
       disallowed_tools: |
         Read(*_mock.go)
