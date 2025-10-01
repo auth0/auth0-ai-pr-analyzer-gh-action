@@ -186,7 +186,6 @@ jobs:
           github_token: ${{ github.token }}
 
       - name: Trigger Claude Code
-        # when updating the tag, remember to update the github_inline_comment mcp configuration too
         uses: anthropics/claude-code-action@7ed3b616d54fd445625b77b219342949146bae9e  # v1.0.7
         with:
           use_bedrock: 'true'
