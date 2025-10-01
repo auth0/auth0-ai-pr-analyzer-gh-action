@@ -17,6 +17,11 @@ on:
         required: false
         type: string
         default: ''
+      allowed_tools:
+        description: 'Comma-separated list of tools to allow during the review'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -58,25 +63,25 @@ jobs:
           set -e
 
           EXCLUDE_PATHS=(
-              ':!vendor/**'
-              ':!node_modules/**'
-              ':!dist/**'
-              ':!build/**'
-              ':!out/**'
-              ':!target/**'
-              ':!bin/**'
-              ':!coverage/**'
-              ':!package-lock.json'
-              ':!yarn.lock'
-              ':!pnpm-lock.yaml'
-              ':!composer.lock'
-              ':!Pipfile.lock'
-              ':!poetry.lock'
-              ':!go.sum'
-              ':!*.min.js'
-              ':!*.min.css'
-              ':!*.bundle.js'
-              ':!*.bundle.css'
+              ':!**/vendor/**'
+              ':!**/node_modules/**'
+              ':!**/dist/**'
+              ':!**/build/**'
+              ':!**/out/**'
+              ':!**/target/**'
+              ':!**/bin/**'
+              ':!**/coverage/**'
+              ':!**/package-lock.json'
+              ':!**/yarn.lock'
+              ':!**/pnpm-lock.yaml'
+              ':!**/composer.lock'
+              ':!**/Pipfile.lock'
+              ':!**/poetry.lock'
+              ':!**/go.sum'
+              ':!**/*.min.js'
+              ':!**/*.min.css'
+              ':!**/*.bundle.js'
+              ':!**/*.bundle.css'
           )
 
           # Get PR number from the event
@@ -178,16 +183,34 @@ jobs:
         uses: auth0/auth0-ai-pr-analyzer-gh-action/hide-previous-reviews@main
         with:
           pr_number: ${{ github.event.pull_request.number || github.event.issue.number }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
 
-      - name: Claude Code Action with Bedrock
-        uses: anthropics/claude-code-action@950bdc01df83ec90f3e4aad85504e8e84b20a035 #v0.6.11
+      - name: Trigger Claude Code
+        uses: anthropics/claude-code-action@7ed3b616d54fd445625b77b219342949146bae9e  # v1.0.7
         with:
-          model: arn:aws:bedrock:us-east-1:340752820498:application-inference-profile/mxelqitzlze2
-          use_bedrock: "true"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          use_sticky_comment: "true"
-          custom_instructions: |
+          use_bedrock: 'true'
+          track_progress: 'true'
+          github_token: ${{ github.token }}
+          claude_args: |
+            --model arn:aws:bedrock:us-east-1:340752820498:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+            --allowedTools "Bash(ls:*),
+              Bash(cat diff.txt),
+              Edit,
+              MultiEdit,
+              Glob,
+              Grep,
+              LS,
+              Read,
+              Write,
+              ${{ inputs.allowed_tools != '' && format('{0},', inputs.allowed_tools) || '' }}
+              mcp__github_inline_comment__create_inline_comment"
+            --disallowedTools "Bash(git diff:*),
+              Bash(git pr diff:*),
+              Read(vendor),
+              Read(package-lock.json),
+              ${{ inputs.disallowed_tools != '' && format('{0},', inputs.disallowed_tools) || '' }}
+              Read(dist)"
+          prompt: |
             <intent_analysis>
               Determine the user's intent first:
               - If the user is asking a specific question (e.g., "Why is this failing?", "How does this work?", "What's the performance impact?"), follow the <question_mode> instructions.
