@@ -1,0 +1,177 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ -z "$PR_NUMBER" ]; then
+	echo "ERROR: Could not determine PR number from GitHub event"
+	exit 1
+fi
+if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+	echo "Error: PR number must be numeric"
+	exit 1
+fi
+
+REPO_OWNER_AND_NAME=$(gh repo view --json owner,name --jq '.owner.login + "/" + .name')
+echo "Processing PR #$PR_NUMBER in repository $REPO_OWNER_AND_NAME"
+
+# GraphQL query to get all reviews by github-actions bot
+GET_REVIEWS_QUERY='
+query($owner: String!, $name: String!, $pr: Int!) {
+	repository(owner: $owner, name: $name) {
+	pullRequest(number: $pr) {
+		reviews(first: 100) {
+		nodes {
+			id
+			author {
+			login
+			}
+			createdAt
+			state
+		}
+		}
+	}
+	}
+}'
+
+# GraphQL mutation to minimize outdated reviews
+MINIMIZE_REVIEW_MUTATION='
+mutation($reviewId: ID!) {
+	minimizeComment(input: {subjectId: $reviewId, classifier: OUTDATED}) {
+	minimizedComment {
+		isMinimized
+	}
+	}
+}'
+
+# GraphQL query to get all issue comments (not review comments)
+GET_ISSUE_COMMENTS_QUERY='
+query($owner: String!, $name: String!, $pr: Int!) {
+	repository(owner: $owner, name: $name) {
+	pullRequest(number: $pr) {
+		comments(first: 100) {
+		nodes {
+			id
+			author {
+			login
+			}
+			body
+			createdAt
+		}
+		}
+	}
+	}
+}'
+
+# GraphQL query to get all review comments (inline comments on code)
+GET_REVIEW_COMMENTS_QUERY='
+query($owner: String!, $name: String!, $pr: Int!) {
+	repository(owner: $owner, name: $name) {
+	pullRequest(number: $pr) {
+		reviewThreads(first: 100) {
+		nodes {
+			comments(first: 100) {
+			nodes {
+				id
+				author {
+				login
+				}
+				body
+				createdAt
+			}
+			}
+		}
+		}
+	}
+	}
+}'
+
+# GraphQL mutation to minimize comments
+MINIMIZE_COMMENT_MUTATION='
+mutation($commentId: ID!) {
+	minimizeComment(input: {subjectId: $commentId, classifier: OUTDATED}) {
+	minimizedComment {
+		isMinimized
+	}
+	}
+}'
+
+# Extract owner and repo name
+OWNER=$(echo "$REPO_OWNER_AND_NAME" | cut -d'/' -f1)
+REPO_NAME=$(echo "$REPO_OWNER_AND_NAME" | cut -d'/' -f2)
+
+echo "Getting reviews for PR #$PR_NUMBER..."
+
+# Get all reviews by github-actions bot
+REVIEWS_JSON=$(gh api graphql -f query="$GET_REVIEWS_QUERY" -f owner="$OWNER" -f name="$REPO_NAME" -F pr="$PR_NUMBER")
+
+# Extract review IDs from github-actions bot
+GITHUB_ACTIONS_REVIEWS=$(echo "$REVIEWS_JSON" | jq -r '.data.repository.pullRequest.reviews.nodes[] | select(.author.login == "github-actions") | .id')
+if [ -n "$GITHUB_ACTIONS_REVIEWS" ]; then
+	# Count reviews
+	review_count=$(echo "$GITHUB_ACTIONS_REVIEWS" | wc -l | tr -d ' ')
+	if [ "$review_count" -gt 0 ]; then
+		echo "Found $review_count reviews to minimize"
+
+		# Minimize all reviews
+		for review_id in $GITHUB_ACTIONS_REVIEWS; do
+			echo "Minimizing review: $review_id"
+			if ! gh api graphql -f query="$MINIMIZE_REVIEW_MUTATION" -f reviewId="$review_id" > /dev/null 2>&1; then
+				echo "Warning: Failed to minimize review $review_id"
+			fi
+		done
+	fi
+	
+else
+	echo "No previous reviews by github-actions bot found to minimize."
+fi
+
+echo "Getting issue comments for PR #$PR_NUMBER..."
+
+# Get all issue comments by github-actions bot that start with "**Claude finished"
+COMMENTS_JSON=$(gh api graphql -f query="$GET_ISSUE_COMMENTS_QUERY" -f owner="$OWNER" -f name="$REPO_NAME" -F pr="$PR_NUMBER")
+
+# Extract comment IDs from github-actions bot that start with "**Claude finished"
+CLAUDE_FINISHED_COMMENTS=$(echo "$COMMENTS_JSON" | jq -r '.data.repository.pullRequest.comments.nodes[] | select(.author.login == "github-actions" and (.body | startswith("**Claude finished"))) | .id')
+
+if [ -n "$CLAUDE_FINISHED_COMMENTS" ]; then
+	comment_count=$(echo "$CLAUDE_FINISHED_COMMENTS" | wc -l | tr -d ' ')
+	echo "Found $comment_count comments to minimize"
+
+	# Minimize each matching comment
+	for comment_id in $CLAUDE_FINISHED_COMMENTS; do
+		if [ -n "$comment_id" ]; then
+			echo "Minimizing comment: $comment_id"
+			if ! gh api graphql -f query="$MINIMIZE_COMMENT_MUTATION" -f commentId="$comment_id" > /dev/null 2>&1; then
+				echo "Warning: Failed to minimize comment $comment_id"
+			fi
+		fi
+	done
+else
+	echo "No Claude finished comments found to minimize"
+fi
+
+echo "Getting review comments for PR #$PR_NUMBER..."
+
+# Get all review comments (inline comments) by github-actions bot
+REVIEW_COMMENTS_JSON=$(gh api graphql -f query="$GET_REVIEW_COMMENTS_QUERY" -f owner="$OWNER" -f name="$REPO_NAME" -F pr="$PR_NUMBER")
+
+# Extract review comment IDs from github-actions bot
+GITHUB_ACTIONS_REVIEW_COMMENTS=$(echo "$REVIEW_COMMENTS_JSON" | jq -r '.data.repository.pullRequest.reviewThreads.nodes[].comments.nodes[] | select(.author.login == "github-actions") | .id')
+
+if [ -n "$GITHUB_ACTIONS_REVIEW_COMMENTS" ]; then
+	review_comment_count=$(echo "$GITHUB_ACTIONS_REVIEW_COMMENTS" | wc -l | tr -d ' ')
+	echo "Found $review_comment_count review comments to minimize"
+
+	# Minimize each review comment
+	for comment_id in $GITHUB_ACTIONS_REVIEW_COMMENTS; do
+		if [ -n "$comment_id" ]; then
+			echo "Minimizing review comment: $comment_id"
+			if ! gh api graphql -f query="$MINIMIZE_COMMENT_MUTATION" -f commentId="$comment_id" > /dev/null 2>&1; then
+				echo "Warning: Failed to minimize review comment $comment_id"
+			fi
+		fi
+	done
+else
+	echo "No review comments by github-actions bot found to minimize"
+fi
+
+echo "Completed hiding previous reviews and comments for PR #$PR_NUMBER"
