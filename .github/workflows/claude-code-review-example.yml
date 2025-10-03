@@ -10,7 +10,24 @@ on:
 
 jobs:
   claude-review:
-    uses: ./.github/workflows/claude-code-review.yml
-    with:
-      disallowed_tools: |
-        Read(README.md)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write # Required for OIDC authentication with AWS
+    # these if statements should be in sync with claude-code-review.yaml
+    if: | 
+      (
+        (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '@claude') && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER')) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') && (github.event.review.author_association == 'OWNER' || github.event.review.author_association == 'MEMBER'))
+      )
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Run Claude Code PR Review
+        uses: ./
