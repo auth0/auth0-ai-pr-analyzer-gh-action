@@ -46,5 +46,4 @@ jobs:
           custom_review_instructions: ${{ inputs.custom_review_instructions }}
           allowed_tools: ${{ inputs.allowed_tools }}
           disallowed_tools: ${{ inputs.disallowed_tools }}
-          disable_knowledge_base: ${{ inputs.disable_knowledge_base }}
           

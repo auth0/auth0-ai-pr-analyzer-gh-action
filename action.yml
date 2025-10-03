@@ -102,7 +102,6 @@ runs:
           Read,
           Write,
           ${{ inputs.allowed_tools != '' && format('{0},', inputs.allowed_tools) || '' }}
-          ${{ inputs.disable_knowledge_base != 'true' && 'mcp__bedrock-kb,' || '' }}
           mcp__github_inline_comment__create_inline_comment"
         --disallowedTools "Bash(git diff:*),
           Bash(git pr diff:*),
