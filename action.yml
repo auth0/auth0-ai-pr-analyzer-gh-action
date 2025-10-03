@@ -85,7 +85,7 @@ runs:
       track_progress: 'true'
       github_token: ${{ github.token }}
       claude_args: |
-        --model arn:aws:bedrock:us-east-1:340752820498:inference-profile/us.anthropic.claude-sonnet-4-20250514-v1:0
+        --model arn:aws:bedrock:us-east-1:340752820498:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0
         --allowedTools "Bash(git add:*),
           Bash(git commit:*),
           Bash(git push:*),
