@@ -33,15 +33,15 @@ jobs:
     # these if statements should be in sync with claude-code-review-example.yaml
     if: |
       (
-        (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '@claude') && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.user.login == 'Tennyx')) ||
-        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER' || github.event.comment.user.login == 'Tennyx')) ||
-        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER' || github.event.comment.user.login == 'Tennyx')) ||
-        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') && (github.event.review.author_association == 'OWNER' || github.event.review.author_association == 'MEMBER' || github.event.review.user.login == 'Tennyx'))
+        (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '@claude') && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER')) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') && (github.event.review.author_association == 'OWNER' || github.event.review.author_association == 'MEMBER'))
       )
     runs-on: ubuntu-latest
     steps:
       - name: Claude Code PR Review Action
-        uses: auth0/auth0-ai-pr-analyzer-gh-action@enable-agent-use
+        uses: auth0/auth0-ai-pr-analyzer-gh-action@main
         with:
           custom_review_instructions: ${{ inputs.custom_review_instructions }}
           allowed_tools: ${{ inputs.allowed_tools }}
