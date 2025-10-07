@@ -79,7 +79,7 @@ runs:
       aws-region: us-east-1
 
   - name: Trigger Claude Code
-    uses: anthropics/claude-code-action@7ed3b616d54fd445625b77b219342949146bae9e  # v1.0.7
+    uses: anthropics/claude-code-action@ac1a3207f3f00b4a37e2f3a6f0935733c7c64651  # v1.0.11
     with:
       use_bedrock: 'true'
       track_progress: 'true'
