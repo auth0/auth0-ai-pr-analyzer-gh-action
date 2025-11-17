@@ -23,23 +23,47 @@ runs:
   using: 'composite'
   steps:
   - name: Get PR info for fork support
-    if: github.event.issue.pull_request
     id: pr-info
+    shell: bash
     run: |
-      PR_DATA=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }})
-      echo "pr_head_owner=$(echo "$PR_DATA" | jq -r '.head.repo.owner.login')" >> $GITHUB_OUTPUT
-      echo "pr_head_repo=$(echo "$PR_DATA" | jq -r '.head.repo.name')" >> $GITHUB_OUTPUT
-      echo "pr_head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> $GITHUB_OUTPUT
-      echo "is_fork=$(echo "$PR_DATA" | jq -r '.head.repo.fork')" >> $GITHUB_OUTPUT
+      PR_NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
+      echo "PR_NUMBER=$PR_NUMBER"
+      if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+        echo "Fetching PR info for PR #$PR_NUMBER"
+        PR_DATA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
+        echo "pr_head_owner=$(echo "$PR_DATA" | jq -r '.head.repo.owner.login')" >> $GITHUB_OUTPUT
+        echo "pr_head_repo=$(echo "$PR_DATA" | jq -r '.head.repo.name')" >> $GITHUB_OUTPUT
+        echo "pr_head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> $GITHUB_OUTPUT
+        echo "is_fork=$(echo "$PR_DATA" | jq -r '.head.repo.fork')" >> $GITHUB_OUTPUT
+        echo "Found fork: $(echo "$PR_DATA" | jq -r '.head.repo.fork'), branch: $(echo "$PR_DATA" | jq -r '.head.ref')"
+      else
+        echo "No PR number found, skipping fork detection"
+        echo "is_fork=false" >> $GITHUB_OUTPUT
+      fi
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
 
   - name: Checkout repository
     uses: actions/checkout@v4
     with:
-      repository: ${{ github.event.issue.pull_request && steps.pr-info.outputs.is_fork == 'true' && format('{0}/{1}', steps.pr-info.outputs.pr_head_owner, steps.pr-info.outputs.pr_head_repo) || github.repository }}
-      ref: ${{ github.event.issue.pull_request && steps.pr-info.outputs.pr_head_ref || github.ref }}
+      repository: ${{ steps.pr-info.outputs.is_fork == 'true' && format('{0}/{1}', steps.pr-info.outputs.pr_head_owner, steps.pr-info.outputs.pr_head_repo) || github.repository }}
+      ref: ${{ steps.pr-info.outputs.is_fork == 'true' && steps.pr-info.outputs.pr_head_ref || github.ref }}
       fetch-depth: 0
+
+  - name: Configure remotes for fork PR
+    if: steps.pr-info.outputs.is_fork == 'true'
+    shell: bash
+    run: |
+      echo "Configuring git remotes for fork PR"
+      echo "Current remotes:"
+      git remote -v
+
+      echo "Adding base repository as upstream"
+      git remote add upstream https://github.com/${{ github.repository }}.git
+      git fetch upstream --quiet
+
+      echo "Final remotes:"
+      git remote -v
 
   - name: Copy Claude config to home directory
     shell: bash
