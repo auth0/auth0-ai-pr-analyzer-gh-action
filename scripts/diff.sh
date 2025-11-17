@@ -47,6 +47,15 @@ MERGE_SHA=$(echo "$PR_INFO_JSON" | jq -r '.mergeCommit.oid // ""') # Use // "" f
 
 echo "PR State: $STATE"
 
+# Determine the repository to fetch from (fork or base)
+FETCH_REPO="origin"
+if [ -n "${GITHUB_HEAD_REPO:-}" ]; then
+	# This is a fork PR, add the fork as a remote and fetch from it
+	echo "Detected fork PR from ${GITHUB_HEAD_REPO}"
+	git remote add fork "https://github.com/${GITHUB_HEAD_REPO}.git" 2>/dev/null || true
+	FETCH_REPO="fork"
+fi
+
 # Fetch the specific commits we need. This is more efficient than fetching branches.
 echo "Fetching necessary commits from remote..."
 # Collect all SHAs we might need to fetch
@@ -54,7 +63,7 @@ SHAS_TO_FETCH=()
 [ -n "$BASE_SHA" ] && SHAS_TO_FETCH+=("$BASE_SHA")
 [ -n "$HEAD_SHA" ] && SHAS_TO_FETCH+=("$HEAD_SHA")
 [ -n "$MERGE_SHA" ] && SHAS_TO_FETCH+=("$MERGE_SHA")
-git fetch origin "${SHAS_TO_FETCH[@]}" --quiet
+git fetch $FETCH_REPO "${SHAS_TO_FETCH[@]}" --quiet
 
 echo "Generating diff with exclusions..."
 

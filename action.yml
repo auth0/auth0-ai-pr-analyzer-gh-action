@@ -22,9 +22,26 @@ inputs:
 runs:
   using: 'composite'
   steps:
+  - name: Detect fork PR
+    id: pr-info
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: "${{ github.event.issue.number || github.event.pull_request.number }}"
+    run: |
+      if [ -n "$PR_NUMBER" ]; then
+        PR_DATA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
+        echo "is_fork=$(echo "$PR_DATA" | jq -r '.head.repo.fork')" >> $GITHUB_OUTPUT
+        echo "pr_head_owner=$(echo "$PR_DATA" | jq -r '.head.repo.owner.login')" >> $GITHUB_OUTPUT
+        echo "pr_head_repo=$(echo "$PR_DATA" | jq -r '.head.repo.name')" >> $GITHUB_OUTPUT
+        echo "pr_head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> $GITHUB_OUTPUT
+      fi
+
   - name: Checkout code
     uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     with:
+      repository: ${{ steps.pr-info.outputs.is_fork == 'true' && format('{0}/{1}', steps.pr-info.outputs.pr_head_owner, steps.pr-info.outputs.pr_head_repo) || github.repository }}
+      ref: ${{ steps.pr-info.outputs.is_fork == 'true' && steps.pr-info.outputs.pr_head_ref || github.ref }}
       fetch-depth: 0
 
   - name: Copy Claude config to home directory
@@ -47,6 +64,7 @@ runs:
     env:
       GH_TOKEN: ${{ github.token }}
       PR_NUMBER: "${{ github.event.issue.number || github.event.pull_request.number }}"
+      GITHUB_HEAD_REPO: ${{ steps.pr-info.outputs.is_fork == 'true' && format('{0}/{1}', steps.pr-info.outputs.pr_head_owner, steps.pr-info.outputs.pr_head_repo) || '' }}
     run: ${GITHUB_ACTION_PATH}/scripts/diff.sh
 
   - name: Hide Previous Reviews
