@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Claude Code PR Review Action
-        uses: auth0/auth0-ai-pr-analyzer-gh-action@fix-fork-issues
+        uses: auth0/auth0-ai-pr-analyzer-gh-action@39cac1b19e91e3befe465e9e5ec9161f263593d5
         with:
           custom_review_instructions: ${{ inputs.custom_review_instructions }}
           allowed_tools: ${{ inputs.allowed_tools }}
