@@ -54,7 +54,15 @@ SHAS_TO_FETCH=()
 [ -n "$BASE_SHA" ] && SHAS_TO_FETCH+=("$BASE_SHA")
 [ -n "$HEAD_SHA" ] && SHAS_TO_FETCH+=("$HEAD_SHA")
 [ -n "$MERGE_SHA" ] && SHAS_TO_FETCH+=("$MERGE_SHA")
-git fetch origin "${SHAS_TO_FETCH[@]}" --quiet
+
+# Fetch from upstream if it exists (fork PR), otherwise from origin
+if git remote | grep -q "^upstream$"; then
+	echo "Fetching base commits from upstream (fork PR)"
+	git fetch upstream "${SHAS_TO_FETCH[@]}" --quiet 2>/dev/null || git fetch origin "${SHAS_TO_FETCH[@]}" --quiet
+else
+	echo "Fetching commits from origin"
+	git fetch origin "${SHAS_TO_FETCH[@]}" --quiet
+fi
 
 echo "Generating diff with exclusions..."
 
