@@ -61,6 +61,16 @@ jobs:
           ref: ${{ github.event.issue.pull_request && steps.pr-info.outputs.pr_head_ref || github.ref }}
           fetch-depth: 0
 
+      # For fork PRs, add the base repository as upstream and fetch base branch
+      - name: Set up base repository remote for fork
+        if: github.event.issue.pull_request && steps.pr-info.outputs.is_fork == 'true'
+        run: |
+          git remote add upstream https://github.com/${{ github.repository }}.git
+          git fetch upstream
+          git remote -v
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Claude Code PR Review Action
         uses: auth0/auth0-ai-pr-analyzer-gh-action@fix-fork-issues
         with:
