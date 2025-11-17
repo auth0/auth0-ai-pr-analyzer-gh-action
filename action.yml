@@ -24,29 +24,34 @@ runs:
   steps:
   # Get PR info for fork support - must happen before checkout
   - name: Get PR info for fork support
-    if: github.event.issue.pull_request
+    if: github.event.issue.number || github.event.pull_request.number
     id: pr-info
     shell: bash
     env:
       GH_TOKEN: ${{ github.token }}
     run: |
-      PR_DATA=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }})
-      echo "pr_head_owner=$(echo "$PR_DATA" | jq -r '.head.repo.owner.login')" >> $GITHUB_OUTPUT
-      echo "pr_head_repo=$(echo "$PR_DATA" | jq -r '.head.repo.name')" >> $GITHUB_OUTPUT
-      echo "pr_head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> $GITHUB_OUTPUT
-      echo "is_fork=$(echo "$PR_DATA" | jq -r '.head.repo.fork')" >> $GITHUB_OUTPUT
+      PR_NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
+      if [ -n "$PR_NUMBER" ]; then
+        echo "Fetching PR info for PR #$PR_NUMBER"
+        PR_DATA=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
+        echo "pr_head_owner=$(echo "$PR_DATA" | jq -r '.head.repo.owner.login')" >> $GITHUB_OUTPUT
+        echo "pr_head_repo=$(echo "$PR_DATA" | jq -r '.head.repo.name')" >> $GITHUB_OUTPUT
+        echo "pr_head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> $GITHUB_OUTPUT
+        echo "is_fork=$(echo "$PR_DATA" | jq -r '.head.repo.fork')" >> $GITHUB_OUTPUT
+        echo "Found fork: $(echo "$PR_DATA" | jq -r '.head.repo.fork'), branch: $(echo "$PR_DATA" | jq -r '.head.ref')"
+      fi
 
   # Checkout repository (works for both fork and non-fork PRs)
   - name: Checkout repository
     uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     with:
-      repository: ${{ github.event.issue.pull_request && steps.pr-info.outputs.is_fork == 'true' && format('{0}/{1}', steps.pr-info.outputs.pr_head_owner, steps.pr-info.outputs.pr_head_repo) || github.repository }}
-      ref: ${{ github.event.issue.pull_request && steps.pr-info.outputs.pr_head_ref || github.ref }}
+      repository: ${{ steps.pr-info.outputs.is_fork == 'true' && format('{0}/{1}', steps.pr-info.outputs.pr_head_owner, steps.pr-info.outputs.pr_head_repo) || github.repository }}
+      ref: ${{ steps.pr-info.outputs.is_fork == 'true' && steps.pr-info.outputs.pr_head_ref || github.ref }}
       fetch-depth: 0
 
   # For fork PRs, add base repo as upstream and ensure branch is available as remote ref
   - name: Configure remotes for fork PR
-    if: github.event.issue.pull_request && steps.pr-info.outputs.is_fork == 'true'
+    if: steps.pr-info.outputs.is_fork == 'true'
     shell: bash
     run: |
       echo "Current state after checkout:"
