@@ -44,22 +44,29 @@ runs:
       ref: ${{ github.event.issue.pull_request && steps.pr-info.outputs.pr_head_ref || github.ref }}
       fetch-depth: 0
 
-  # For fork PRs, add base repo as upstream and ensure branch is trackable
+  # For fork PRs, add base repo as upstream and ensure branch is available as remote ref
   - name: Configure remotes for fork PR
     if: github.event.issue.pull_request && steps.pr-info.outputs.is_fork == 'true'
     shell: bash
     run: |
+      echo "Current state after checkout:"
+      git branch -vv
+      git remote -v
+      echo ""
+
       echo "Adding base repository as upstream remote"
       git remote add upstream https://github.com/${{ github.repository }}.git
       git fetch upstream --quiet
 
-      # Ensure the fork branch exists as a remote ref that claude-code-action can find
-      echo "Ensuring branch ${{ steps.pr-info.outputs.pr_head_ref }} is available"
-      git branch --set-upstream-to=origin/${{ steps.pr-info.outputs.pr_head_ref }} ${{ steps.pr-info.outputs.pr_head_ref }} 2>/dev/null || true
+      # Ensure origin has the fork branch as a remote ref
+      echo "Fetching fork branch to ensure it's available as origin/${{ steps.pr-info.outputs.pr_head_ref }}"
+      git fetch origin ${{ steps.pr-info.outputs.pr_head_ref }}:refs/remotes/origin/${{ steps.pr-info.outputs.pr_head_ref }} --force
 
-      echo "Current branch and remotes:"
+      echo ""
+      echo "Final git state:"
       git branch -vv
       git remote -v
+      git branch -r | grep ${{ steps.pr-info.outputs.pr_head_ref }} || echo "Remote branch not found!"
 
   - name: Copy Claude config to home directory
     shell: bash
