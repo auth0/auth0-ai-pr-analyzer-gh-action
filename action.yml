@@ -22,6 +22,25 @@ inputs:
 runs:
   using: 'composite'
   steps:
+  - name: Get PR info for fork support
+    if: github.event.issue.pull_request
+    id: pr-info
+    run: |
+      PR_DATA=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }})
+      echo "pr_head_owner=$(echo "$PR_DATA" | jq -r '.head.repo.owner.login')" >> $GITHUB_OUTPUT
+      echo "pr_head_repo=$(echo "$PR_DATA" | jq -r '.head.repo.name')" >> $GITHUB_OUTPUT
+      echo "pr_head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> $GITHUB_OUTPUT
+      echo "is_fork=$(echo "$PR_DATA" | jq -r '.head.repo.fork')" >> $GITHUB_OUTPUT
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  - name: Checkout repository
+    uses: actions/checkout@v4
+    with:
+      repository: ${{ github.event.issue.pull_request && steps.pr-info.outputs.is_fork == 'true' && format('{0}/{1}', steps.pr-info.outputs.pr_head_owner, steps.pr-info.outputs.pr_head_repo) || github.repository }}
+      ref: ${{ github.event.issue.pull_request && steps.pr-info.outputs.pr_head_ref || github.ref }}
+      fetch-depth: 0
+
   - name: Copy Claude config to home directory
     shell: bash
     run: |
@@ -47,7 +66,7 @@ runs:
   - name: Hide Previous Reviews
     shell: bash
     if: |
-      (github.event_name == 'issue_comment' && github.event.comment.body == '@claude') ||
+      (github.event_name == 'issue_comment' && github.event.comment.body == '@claude') || 
       (github.event_name == 'pull_request_review' && github.event.review.body == '@claude')
     env:
       GH_TOKEN: ${{ github.token }}
