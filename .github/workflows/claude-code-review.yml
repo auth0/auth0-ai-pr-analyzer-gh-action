@@ -61,12 +61,14 @@ jobs:
           ref: ${{ github.event.issue.pull_request && steps.pr-info.outputs.pr_head_ref || github.ref }}
           fetch-depth: 0
 
-      # For fork PRs, add the base repository as upstream and fetch base branch
-      - name: Set up base repository remote for fork
+      # For fork PRs, configure origin to fetch from both base and fork repos
+      - name: Configure git remote for fork PR
         if: github.event.issue.pull_request && steps.pr-info.outputs.is_fork == 'true'
         run: |
-          git remote add upstream https://github.com/${{ github.repository }}.git
-          git fetch upstream
+          echo "Configuring git to fetch from fork: https://github.com/${{ steps.pr-info.outputs.pr_head_owner }}/${{ steps.pr-info.outputs.pr_head_repo }}.git"
+          # Add the fork URL to origin so claude-code-action can fetch the fork branch
+          git remote set-url origin --add "https://github.com/${{ steps.pr-info.outputs.pr_head_owner }}/${{ steps.pr-info.outputs.pr_head_repo }}.git"
+          echo "Git remotes configured:"
           git remote -v
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
