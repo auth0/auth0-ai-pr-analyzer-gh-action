@@ -44,6 +44,16 @@ runs:
       ref: ${{ steps.pr-info.outputs.is_fork == 'true' && steps.pr-info.outputs.pr_head_ref || github.ref }}
       fetch-depth: 0
 
+  - name: Set up remotes for fork
+    if: steps.pr-info.outputs.is_fork == 'true'
+    shell: bash
+    run: |
+      cd ${{ github.workspace }}
+      # For forks, the checkout action has already set origin to the fork repo
+      # Add the base repository as 'upstream' remote
+      git remote add upstream https://github.com/${{ github.repository }}.git || true
+      git remote -v
+
   - name: Copy Claude config to home directory
     shell: bash
     run: |
