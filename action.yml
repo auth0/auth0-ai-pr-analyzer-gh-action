@@ -79,13 +79,20 @@ runs:
       aws-region: us-east-1
 
   - name: Trigger Claude Code
-    uses: anthropics/claude-code-action@ac1a3207f3f00b4a37e2f3a6f0935733c7c64651  # v1.0.11
+    uses: anthropics/claude-code-action@9db20ef677c726762b864933147219a688175107  # Claude Code 2.0.46
     with:
       use_bedrock: 'true'
       track_progress: 'true'
       github_token: ${{ github.token }}
+      settings: |
+        {
+          "env": {
+            "CLAUDE_CODE_SUBAGENT_MODEL": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+            "ANTHROPIC_DEFAULT_HAIKU_MODEL": "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+          }
+        }
       claude_args: |
-        --model arn:aws:bedrock:us-east-1:340752820498:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0
+        --model global.anthropic.claude-sonnet-4-5-20250929-v1:0
         --allowedTools "Bash(git add:*),
           Bash(git commit:*),
           Bash(git push:*),
