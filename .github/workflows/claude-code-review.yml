@@ -24,13 +24,25 @@ on:
         default: ''
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug Event Data
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "PR body: ${{ github.event.pull_request.body }}"
+          echo "PR author association: ${{ github.event.pull_request.author_association }}"
+          echo "Contains @claude: ${{ contains(github.event.pull_request.body, '@claude') }}"
+          echo "Full event payload:"
+          echo '${{ toJSON(github.event) }}'
+
   claude-review:
+    needs: debug
     permissions:
       contents: write
       pull-requests: write
       issues: write
-      id-token: write # Required for OIDC authentication with AWS
-    # these if statements should be in sync with claude-code-review-example.yaml
+      id-token: write
     if: |
       (
         (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '@claude') && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER')) ||
