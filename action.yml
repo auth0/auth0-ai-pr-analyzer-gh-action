@@ -18,6 +18,10 @@ inputs:
     description: 'Comma-separated list of tools to disallow during the review'
     required: false
     default: ''
+  trigger_phrase:
+    description: 'The trigger phrase to look for in comments, issue body, or pull request body'
+    required: false
+    default: '@claude'
 
 runs:
   using: 'composite'
@@ -84,6 +88,7 @@ runs:
       use_bedrock: 'true'
       track_progress: 'true'
       github_token: ${{ github.token }}
+      trigger_phrase: ${{ inputs.trigger_phrase }}
       settings: |
         {
           "env": {
