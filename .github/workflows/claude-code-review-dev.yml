@@ -1,0 +1,37 @@
+name: Claude Code PR Review Test
+
+on:
+  pull_request_target:
+    types: [ opened, synchronize, reopened, edited ]
+  issue_comment:
+    types: [ created ]
+  pull_request_review_comment:
+    types: [ created ]
+  pull_request_review:
+    types: [ submitted ]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write # Required for OIDC authentication with AWS
+    # Test workflow triggered by @claudev instead of @claude
+    if: |
+      (
+        (github.event_name == 'pull_request_target' && contains(github.event.pull_request.body, '@claudev') && (github.event.pull_request.author_association == 'OWNER' || github.event.pull_request.author_association == 'MEMBER')) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claudev') && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claudev') && (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claudev') && (github.event.review.author_association == 'OWNER' || github.event.review.author_association == 'MEMBER'))
+      )
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Run Claude Code PR Review
+        uses: auth0/auth0-ai-pr-analyzer-gh-action@dev
+        with:
+          trigger_phrase: '@claudev'
