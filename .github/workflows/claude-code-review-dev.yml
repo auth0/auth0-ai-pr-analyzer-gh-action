@@ -11,7 +11,19 @@ on:
     types: [ submitted ]
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug Event Data
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "PR body: ${{ github.event.pull_request.body }}"
+          echo "PR author association: ${{ github.event.pull_request.author_association }}"
+          echo "Contains @claude: ${{ contains(github.event.pull_request.body, '@claude') }}"
+          echo "Full event payload:"
+          echo '${{ toJSON(github.event) }}'
   claude-review:
+    needs: debug
     runs-on: ubuntu-latest
     permissions:
       contents: write
