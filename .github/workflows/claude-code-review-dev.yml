@@ -23,11 +23,11 @@ jobs:
     # Test workflow triggered by @claudev instead of @claude
     if: |
       (
-        (github.event_name == 'pull_request_target' && contains(github.event.pull_request.body, '@claudev') ||
-        (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '@claudev') ||
-        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claudev') ||
-        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claudev') ||
-        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claudev')
+        (github.event_name == 'pull_request_target' && contains(github.event.pull_request.body, '@claudev')) ||
+        (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '@claudev')) ||
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claudev')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claudev')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claudev'))
       )
     steps:
       - name: Checkout code
