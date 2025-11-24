@@ -26,16 +26,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-  - name: Debug Event Data
-    shell: bash
-    run: |
-      echo "Event name: ${{ github.event_name }}"
-      echo "PR body: ${{ github.event.pull_request.body }}"
-      echo "PR author association: ${{ github.event.pull_request.author_association }}"
-      echo "Contains @claudev: ${{ contains(github.event.pull_request.body, '@claudev') }}"
-      echo "Full event payload:"
-      echo '${{ toJSON(github.event) }}'
-
   - name: Get PR info for fork support
     if: github.event.issue.pull_request
     id: pr-info
