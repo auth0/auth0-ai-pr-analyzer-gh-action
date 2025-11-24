@@ -26,6 +26,16 @@ inputs:
 runs:
   using: 'composite'
   steps:
+  - name: Debug Event Data
+    shell: bash
+    run: |
+      echo "Event name: ${{ github.event_name }}"
+      echo "PR body: ${{ github.event.pull_request.body }}"
+      echo "PR author association: ${{ github.event.pull_request.author_association }}"
+      echo "Contains @claudev: ${{ contains(github.event.pull_request.body, '@claudev') }}"
+      echo "Full event payload:"
+      echo '${{ toJSON(github.event) }}'
+
   - name: Checkout code
     uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     with:
