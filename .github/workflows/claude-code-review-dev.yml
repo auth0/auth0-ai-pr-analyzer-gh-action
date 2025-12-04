@@ -20,14 +20,14 @@ jobs:
       pull-requests: write
       issues: write
       id-token: write # Required for OIDC authentication with AWS
-    # Test workflow triggered by @claudev instead of @claude
+    # Test workflow triggered by claudev instead of @claude
     if: |
       (
         github.event_name == 'pull_request_target' ||
         github.event_name == 'pull_request' ||
-        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claudev')) ||
-        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claudev')) ||
-        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claudev'))
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, 'claudev')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, 'claudev')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, 'claudev'))
       )
     steps:
       - name: Checkout code
@@ -37,4 +37,4 @@ jobs:
       - name: Run Claude Code PR Review
         uses: auth0/auth0-ai-pr-analyzer-gh-action@dev
         with:
-          trigger_phrase: '@claudev'
+          trigger_phrase: 'claudev'
