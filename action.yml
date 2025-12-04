@@ -72,8 +72,8 @@ runs:
   - name: Hide Previous Reviews
     shell: bash
     if: |
-      (github.event_name == 'issue_comment' && github.event.comment.body == '@claudev') || 
-      (github.event_name == 'pull_request_review' && github.event.review.body == '@claudev')
+      (github.event_name == 'issue_comment' && github.event.comment.body == '@claude') || 
+      (github.event_name == 'pull_request_review' && github.event.review.body == '@claude')
     env:
       GH_TOKEN: ${{ github.token }}
       PR_NUMBER: "${{ github.event.issue.number || github.event.pull_request.number }}"
