@@ -10,7 +10,15 @@ if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
 	exit 1
 fi
 
-REPO_OWNER_AND_NAME=$(gh repo view --json owner,name --jq '.owner.login + "/" + .name')
+if [ -z "${GH_REPO:-}" ]; then
+	echo "ERROR: GH_REPO environment variable is not set"
+	exit 1
+fi
+if ! [[ "$GH_REPO" =~ ^[^/]+/[^/]+$ ]]; then
+	echo "ERROR: GH_REPO must be in format 'owner/repo', got: $GH_REPO"
+	exit 1
+fi
+REPO_OWNER_AND_NAME="$GH_REPO"
 echo "Processing PR #$PR_NUMBER in repository $REPO_OWNER_AND_NAME"
 
 # GraphQL query to get all reviews by github-actions bot
