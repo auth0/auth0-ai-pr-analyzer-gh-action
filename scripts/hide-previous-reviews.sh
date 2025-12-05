@@ -10,12 +10,7 @@ if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
 	exit 1
 fi
 
-# Use GH_REPO if set, otherwise detect from current directory
-if [ -n "${GH_REPO:-}" ]; then
-	REPO_OWNER_AND_NAME="$GH_REPO"
-else
-	REPO_OWNER_AND_NAME=$(gh repo view --json owner,name --jq '.owner.login + "/" + .name')
-fi
+REPO_OWNER_AND_NAME="$GH_REPO"
 echo "Processing PR #$PR_NUMBER in repository $REPO_OWNER_AND_NAME"
 
 # GraphQL query to get all reviews by github-actions bot
