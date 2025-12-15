@@ -141,6 +141,8 @@ To provide feedback or report a bug, please [raise an issue on our issue tracker
   </picture>
 </p>
 <p align="center">
+
+  test
   Auth0 is an easy to implement, adaptable authentication and authorization platform. To learn more checkout <a href="https://auth0.com/why-auth0">Why Auth0?</a>
 </p>
 <p align="center">
