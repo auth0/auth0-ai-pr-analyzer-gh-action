@@ -37,7 +37,11 @@ main() {
     fi
 
     # Ensure file is within repo workspace
-    local -r resolved_path=$(readlink -f "${input_prompt_file}" 2>/dev/null || echo "")
+    local resolved_path
+    if ! resolved_path=$(readlink -f "${input_prompt_file}" 2>&1); then
+      echo "Error: Could not resolve path for '${input_prompt_file}': ${resolved_path}"
+      exit 1
+    fi
     if [ -z "${resolved_path}" ]; then
       echo "Error: Could not resolve path for '${input_prompt_file}'"
       exit 1
@@ -46,7 +50,7 @@ main() {
       echo "Error: prompt_file must be within the repo root"
       exit 1
     fi
-    cp "${input_prompt_file}" "${outfile}"
+    cp "${resolved_path}" "${outfile}"
 
   # If 'prompt' input is provided, use its file contents if not empty
   elif [ -s "${input_prompt}" ]; then
@@ -69,8 +73,7 @@ main() {
       custom_review_instructions=$(<"${input_custom_review_instructions}")
     fi
 
-    envsubst="$(which envsubst)"
-    if [ -z "${envsubst}" ]; then
+    if ! command -v envsubst >/dev/null 2>&1; then
       echo "Error: envsubst not found."
       exit 1
     fi
@@ -78,7 +81,7 @@ main() {
     # Render the prompt template with envsubst
     env -i \
       CUSTOM_REVIEW_INSTRUCTIONS="${custom_review_instructions}" \
-      "${envsubst}" '$CUSTOM_REVIEW_INSTRUCTIONS' < "${prompt_template}" > "${outfile}"
+      envsubst '$CUSTOM_REVIEW_INSTRUCTIONS' < "${prompt_template}" > "${outfile}"
   fi
 }
 
