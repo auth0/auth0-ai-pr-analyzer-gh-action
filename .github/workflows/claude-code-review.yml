@@ -12,6 +12,16 @@ on:
         required: false
         type: string
         default: ''
+      prompt:
+        description: 'Optional prompt to use for the review. If "prompt_file" is also set, that will be used instead.'
+        required: false
+        type: string
+        default: ''
+      prompt_file:
+        description: 'Optional file that contains the prompt to use for the review. This takes priority over "prompt".'
+        required: false
+        type: string
+        default: ''
       disallowed_tools:
         description: 'Comma-separated list of tools to disallow during the review'
         required: false
@@ -44,6 +54,8 @@ jobs:
         uses: auth0/auth0-ai-pr-analyzer-gh-action@main
         with:
           custom_review_instructions: ${{ inputs.custom_review_instructions }}
+          prompt: ${{ inputs.prompt }}
+          prompt_file: ${{ inputs.prompt_file }}
           allowed_tools: ${{ inputs.allowed_tools }}
           disallowed_tools: ${{ inputs.disallowed_tools }}
           
