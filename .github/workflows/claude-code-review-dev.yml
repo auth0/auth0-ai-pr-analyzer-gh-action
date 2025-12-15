@@ -39,3 +39,4 @@ jobs:
         with:
           trigger_phrase: 'claudev'
           prompt: 'Please review the following code changes and provide feedback.'
+          prompt_file: '.claude/agents/prompt.md'
