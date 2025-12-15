@@ -35,6 +35,6 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run Claude Code PR Review
-        uses: auth0/auth0-ai-pr-analyzer-gh-action@dev
+        uses: mmieczynski2/auth0-ai-pr-analyzer-gh-action@main
         with:
           trigger_phrase: 'claudev'
