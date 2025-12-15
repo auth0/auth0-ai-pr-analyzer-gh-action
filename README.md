@@ -61,6 +61,37 @@ jobs:
         - Check for proper resource cleanup (defer statements)
 ```
 
+#### Custom Prompts
+
+Override the entire review prompt using `prompt_file` or `prompt`:
+
+**Using a prompt file:**
+
+```yaml
+jobs:
+  claude-review:
+    uses: auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    with:
+      prompt_file: '.claude/prompts/review-prompt.md'
+```
+
+**Using inline prompt:**
+
+```yaml
+jobs:
+  claude-review:
+    uses: auth0/auth0-ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main
+    with:
+      prompt: |
+        Review this PR for data model changes:
+        1. Run Bash(cat diff.txt)
+        2. Focus on protobuf schema compatibility
+        3. Check for breaking changes
+        4. Use mcp__github_inline_comment__create_inline_comment for feedback
+```
+
+**Priority:** If both `prompt_file` and `prompt` are set, `prompt_file` takes priority.
+
 #### Project Context with CLAUDE.md
 
 For comprehensive project context and review instructions, we recommend creating a `CLAUDE.md` file in your repository root instead of using `custom_review_instructions`. This approach provides better organization and maintainability of your AI assistant context.
