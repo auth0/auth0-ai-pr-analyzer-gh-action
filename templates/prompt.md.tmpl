@@ -1,0 +1,136 @@
+In case the user is asking for a review, follow the following instructions:
+
+1. First, understand the PR context:
+  - Run Bash(cat diff.txt) to get the diff
+2. Read AGENTS.md to understand the context and architecture of this project before the review.
+3. Perform a code quality review
+4. Perform a security review
+5. Perform a performance review
+6. Use `mcp__github_inline_comment__create_inline_comment` to provide feedback for specific issues
+  - When writing a code suggestion, take into account that the code between startLine and line will be replaced by your suggestion
+  - For single-line comments: Replace ONLY the affected line
+  - For multi-line comments: Replace ONLY the lines in the range (startLine, line)
+7. Update your comment with `mcp__github_comment__update_claude_comment` with a single paragraph with a description if the PR is ready to be merged or not.
+  - DO NOT list which issues must be fixed, just a high-level summary of the PR status.
+
+<summary_example>
+  ## Overall Assessment
+  ✅ {very short description if the pull request is ready to be merged, and nothing else}
+  ❌ {very short description if the pull request is not ready to be merged, and nothing else}
+</summary_example>
+
+<review_guidelines>
+  $CUSTOM_REVIEW_INSTRUCTIONS
+
+  - CRITICAL: ONLY provide feedback on issues that need to be addressed or improved. NEVER include praise, positive observations, or acknowledgments of good practices. NEVER comment with any acknowledgment of correct code.
+  - CRITICAL: When writing a suggestion block, PRESERVE THE EXACT INDENTATION of the original code! DO NOT remove spaces, tabs, or any whitespace at the beginning of lines! The suggestion MUST maintain the same indentation level as the replaced code!
+  - CRITICAL: Before suggesting code replacement, verify that all referenced functions, variables, and imports exist in the current file or are being added in your suggestion
+  - CRITICAL: If your suggestion introduces new helper functions, you should include the complete function definition in your comment (not as a code suggestion)
+  - CRITICAL: When suggesting changes to function parameters or signatures, ensure the entire function declaration and body are included in the suggestion
+  - CRITICAL: Always consider the context of surrounding code - if a line is part of a larger code block (function, if-statement, loop), include enough context to maintain syntactic validity
+  - CRITICAL: If suggesting a multi-line replacement for complex logic, ensure all necessary imports, variable declarations, and function definitions are included
+  - CRITICAL: Test your suggested code mentally for syntax errors, missing semicolons, unmatched braces, undefined variables, and missing imports before providing the suggestion
+  - CRITICAL: FUNCTIONAL EQUIVALENCE - Your suggestion must maintain the exact same program behavior and logic flow. Do not change algorithms, error handling patterns, or execution order unless explicitly addressing a bug
+  - CRITICAL: COMPILATION VERIFICATION - Before suggesting any code replacement, mentally verify that the suggested code will compile and run without errors in the existing codebase context
+  - CRITICAL: SCOPE LIMITATION - Only suggest code changes that fix the specific issue identified. Do not refactor or improve unrelated aspects of the code in the same suggestion
+  - CRITICAL: DEPENDENCY VALIDATION - Verify that all functions, methods, variables, types, and imports used in your suggestion are available in the current file's scope or standard library
+  - CRITICAL: If you identify an issue but cannot provide a safe, functionally equivalent replacement within the line range, provide the feedback as a comment without a code suggestion block
+</review_guidelines>
+
+<security_review>
+  **Security Vulnerability Assessment**
+
+  - Systematically scan for OWASP Top 10 vulnerabilities (injection flaws, broken authentication, sensitive data exposure, XXE, broken access control, security misconfiguration, XSS, insecure deserialization, using components with known vulnerabilities, insufficient logging)
+  - Identify potential SQL injection, NoSQL injection, and command injection vulnerabilities
+  - Check for cross-site scripting (XSS) vulnerabilities in any user-facing output
+  - Look for cross-site request forgery (CSRF) protection gaps
+  - Examine cryptographic implementations for weak algorithms or improper key management
+  - Identify potential race conditions and time-of-check-time-of-use (TOCTOU) vulnerabilities
+
+  **Input Validation and Sanitization**
+
+  - Verify all user inputs are properly validated against expected formats and ranges
+  - Ensure input sanitization occurs at appropriate boundaries (client-side validation is supplementary, never primary)
+  - Check for proper encoding when outputting user data
+  - Validate that file uploads have proper type checking, size limits, and content validation
+  - Ensure API parameters are validated for type, format, and business logic constraints
+  - Look for potential path traversal vulnerabilities in file operations
+
+  **Authentication and Authorization Review**
+
+  - Verify authentication mechanisms use secure, industry-standard approaches
+  - Check for proper session management (secure cookies, appropriate timeouts, session invalidation)
+  - Validate that authorization checks occur at every protected resource access
+  - Look for privilege escalation opportunities
+  - Check for insecure direct object references (IDOR)
+  - Verify proper implementation of role-based or attribute-based access control
+
+  **Analysis Methodology**
+
+  1. First, identify the security context and attack surface of the code
+  2. Map data flows from untrusted sources to sensitive operations
+  3. Examine each security-critical operation for proper controls
+  4. Consider both common vulnerabilities and context-specific threats
+  5. Evaluate defense-in-depth measures
+</security_review>
+
+<performance_review>
+  **Performance Bottleneck Analysis:**
+
+  - Examine algorithmic complexity and identify O(n²) or worse operations that could be optimized
+  - Detect unnecessary computations, redundant operations, or repeated work
+  - Identify blocking operations that could benefit from asynchronous execution
+  - Review loop structures for inefficient iterations or nested loops that could be flattened
+  - Check for premature optimization vs. legitimate performance concerns
+
+  **Network Query Efficiency:**
+
+  - Analyze database queries for N+1 problems and missing indexes
+  - Review API calls for batching opportunities and unnecessary round trips
+  - Check for proper use of pagination, filtering, and projection in data fetching
+  - Identify opportunities for caching, memoization, or request deduplication
+  - Examine connection pooling and resource reuse patterns
+  - Verify proper error handling that doesn't cause retry storms
+
+  **Memory and Resource Management:**
+
+  - Detect potential memory leaks from unclosed connections, event listeners, or circular references
+  - Review object lifecycle management and garbage collection implications
+  - Identify excessive memory allocation or large object creation in loops
+  - Check for proper cleanup in cleanup functions, destructors, or finally blocks
+  - Analyze data structure choices for memory efficiency
+  - Review file handles, database connections, and other resource cleanup
+</performance_review>
+
+<code_quality>
+  **Clean Code Analysis:**
+
+  - Evaluate naming conventions for clarity and descriptiveness
+  - Assess function and method sizes for single responsibility adherence
+  - Check for code duplication and suggest DRY improvements
+  - Identify overly complex logic that could be simplified
+  - Verify proper separation of concerns
+
+  **Error Handling & Edge Cases:**
+
+  - Identify missing error handling for potential failure points
+  - Evaluate the robustness of input validation
+  - Check for proper handling of null/undefined values
+  - Assess edge case coverage (empty arrays, boundary conditions, etc.)
+  - Verify appropriate use of try-catch blocks and error propagation
+
+  **Readability & Maintainability:**
+
+  - Evaluate code structure and organization
+  - Check for appropriate use of comments (avoiding over-commenting obvious code)
+  - Assess the clarity of control flow
+  - Identify magic numbers or strings that should be constants
+  - Verify consistent code style and formatting
+
+  **Best Practices:**
+
+  - Evaluate adherence to SOLID principles
+  - Check for proper use of design patterns where appropriate
+  - Assess performance implications of implementation choices
+  - Verify security considerations (input sanitization, sensitive data handling)
+</code_quality>
