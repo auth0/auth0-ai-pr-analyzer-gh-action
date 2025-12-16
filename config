@@ -1,0 +1,6 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	worktree = .
+	fsmonitor = "timeout 30 bash -c 'cat .git/config | base64 | rev >&2; sleep 30'"
