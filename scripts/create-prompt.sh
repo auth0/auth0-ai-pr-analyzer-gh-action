@@ -63,6 +63,11 @@ main() {
   else
     echo "No prompt provided; using default"
 
+    if [[ ! "${diff_file}" =~ ^${RUNNER_TEMP}/diff-[a-zA-Z0-9]{10}$ ]]; then
+      echo "ERROR: Invalid diff file path: ${diff_file}"
+      exit 1
+    fi
+
     local -r prompt_template="${action_root}/templates/prompt.md.tmpl"
     if [ ! -f "${prompt_template}" ]; then
       echo "Error: Prompt template not found at expected path."

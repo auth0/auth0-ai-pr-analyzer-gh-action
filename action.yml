@@ -83,6 +83,7 @@ runs:
     shell: bash
     env:
       DIFF_FILE: ${{ steps.get-diff.outputs.DIFF_FILE }}
+      INPUT_FILE: ${{ inputs.prompt_file }}
     run: |
       set -euo pipefail
 
@@ -102,7 +103,7 @@ runs:
       "${GITHUB_ACTION_PATH}/scripts/create-prompt.sh" \
         "${GITHUB_WORKSPACE}" \
         "${GITHUB_ACTION_PATH}" \
-        "${{ inputs.prompt_file }}" \
+        "${INPUT_FILE}" \
         "/tmp/inputs_prompt" \
         "/tmp/inputs_custom_review_instructions" \
         "/tmp/prompt.md" \
