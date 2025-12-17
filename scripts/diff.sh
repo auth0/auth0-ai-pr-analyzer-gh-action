@@ -1,6 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
+# Generate a unique filename for the diff output
+DIFF_FILE=$(mktemp "${RUNNER_TEMP}/diff-XXXXXXXXXX")
+echo "DIFF_FILE=$DIFF_FILE" >> "$GITHUB_OUTPUT"
+
 EXCLUDE_PATHS=(
 	':!**/vendor/**'
 	':!**/node_modules/**'
@@ -65,34 +69,34 @@ if [ "$STATE" == "MERGED" ]; then
 		if [ "$NUM_PARENTS" -eq 2 ]; then
 			echo "Detected a merge commit ($MERGE_SHA). Diffing against its first parent."
 			# The first parent is the tip of the base branch at the time of merge.
-			git diff "${MERGE_SHA}^1" "$MERGE_SHA" -- "${EXCLUDE_PATHS[@]}" > diff.txt
+			git diff "${MERGE_SHA}^1" "$MERGE_SHA" -- "${EXCLUDE_PATHS[@]}" > "$DIFF_FILE"
 		else
 			echo "Detected a squash commit ($MERGE_SHA). Diffing against its parent."
-			git diff "${MERGE_SHA}^" "$MERGE_SHA" -- "${EXCLUDE_PATHS[@]}" > diff.txt
+			git diff "${MERGE_SHA}^" "$MERGE_SHA" -- "${EXCLUDE_PATHS[@]}" > "$DIFF_FILE"
 		fi
 	else
 		# This was a "Rebase and Merge". There is no merge commit.
 		# The diff is between the base SHA before the rebase and the head SHA after.
 		echo "Detected a rebase and merge. Diffing between base ($BASE_SHA) and head ($HEAD_SHA) SHAs."
-		git diff "$BASE_SHA" "$HEAD_SHA" -- "${EXCLUDE_PATHS[@]}" > diff.txt
+		git diff "$BASE_SHA" "$HEAD_SHA" -- "${EXCLUDE_PATHS[@]}" > "$DIFF_FILE"
 	fi
 elif [ "$STATE" == "OPEN" ]; then
 	# For open PRs, we diff the base and head SHAs.
 	echo "PR is open. Diffing between base ($BASE_SHA) and head ($HEAD_SHA) SHAs."
-	git diff "$BASE_SHA" "$HEAD_SHA" -- "${EXCLUDE_PATHS[@]}" > diff.txt
+	git diff "$BASE_SHA" "$HEAD_SHA" -- "${EXCLUDE_PATHS[@]}" > "$DIFF_FILE"
 else
 	echo "ERROR: PR is closed and not merged. No diff to show."
 	exit 1
 fi
 
-# Verify diff.txt was created and is not empty
-if [ ! -f "diff.txt" ]; then
-	echo "ERROR: diff.txt was not created"
+# Verify diff file was created and is not empty
+if [ ! -f "$DIFF_FILE" ]; then
+	echo "ERROR: $DIFF_FILE was not created"
 	exit 1
 fi
 
-if [ ! -s "diff.txt" ]; then
-	echo "ERROR: diff.txt is empty - no changes to review"
+if [ ! -s "$DIFF_FILE" ]; then
+	echo "ERROR: $DIFF_FILE is empty - no changes to review"
 	exit 1
 fi
 

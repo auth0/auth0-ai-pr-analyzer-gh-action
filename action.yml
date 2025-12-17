@@ -69,9 +69,20 @@ runs:
         exit 1
       fi
 
+  - name: Get diff
+    id: get-diff
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: "${{ github.event.issue.number || github.event.pull_request.number }}"
+      GH_REPO: ${{ github.repository }}
+    run: ${GITHUB_ACTION_PATH}/scripts/diff.sh
+
   - name: Create Claude Prompt
     id: claude_prompt
     shell: bash
+    env:
+      DIFF_FILE: ${{ steps.get-diff.outputs.DIFF_FILE }}
     run: |
       set -euo pipefail
 
@@ -94,7 +105,8 @@ runs:
         "${{ inputs.prompt_file }}" \
         "/tmp/inputs_prompt" \
         "/tmp/inputs_custom_review_instructions" \
-        "/tmp/prompt.md"
+        "/tmp/prompt.md" \
+        "${DIFF_FILE}"
 
       # Write the final prompt to GitHub Outputs using the multi-line syntax
       {
@@ -102,14 +114,6 @@ runs:
         cat /tmp/prompt.md
         echo EOF
       } >> $GITHUB_OUTPUT
-
-  - name: Get diff
-    shell: bash
-    env:
-      GH_TOKEN: ${{ github.token }}
-      PR_NUMBER: "${{ github.event.issue.number || github.event.pull_request.number }}"
-      GH_REPO: ${{ github.repository }}
-    run: ${GITHUB_ACTION_PATH}/scripts/diff.sh
 
   - name: Hide Previous Reviews
     shell: bash
@@ -164,7 +168,7 @@ runs:
           Bash(git rm:*),
           Bash(git log:*),
           Bash(ls:*),
-          Bash(cat diff.txt),
+          Bash(cat ${{ steps.get-diff.outputs.DIFF_FILE }}),
           Edit,
           MultiEdit,
           Glob,
