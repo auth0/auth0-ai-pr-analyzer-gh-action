@@ -84,19 +84,17 @@ runs:
     env:
       DIFF_FILE: ${{ steps.get-diff.outputs.DIFF_FILE }}
       INPUT_FILE: ${{ inputs.prompt_file }}
+      INPUT_PROMPT: ${{ inputs.prompt }}
+      INPUT_CUSTOM_REVIEW_INSTRUCTIONS: ${{ inputs.custom_review_instructions }}
     run: |
       set -euo pipefail
 
       # Write specific inputs to files to avoid escaping issues with shell arguments
-      if [ -n "${{ inputs.prompt }}" ]; then
-        cat > /tmp/inputs_prompt <<'EOF'
-      ${{ inputs.prompt }}
-      EOF
+      if [ -n "${INPUT_PROMPT}" ]; then
+        printf '%s\n' "${INPUT_PROMPT}" > /tmp/inputs_prompt
       fi
-      if [ -n "${{ inputs.custom_review_instructions }}" ]; then
-        cat > /tmp/inputs_custom_review_instructions <<'EOF'
-      ${{ inputs.custom_review_instructions }}
-      EOF
+      if [ -n "${INPUT_CUSTOM_REVIEW_INSTRUCTIONS}" ]; then
+        printf '%s\n' "${INPUT_CUSTOM_REVIEW_INSTRUCTIONS}" > /tmp/inputs_custom_review_instructions
       fi
 
       # Render prompt and store it in /tmp/prompt.md
