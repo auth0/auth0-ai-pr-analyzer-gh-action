@@ -15,6 +15,7 @@
 # $4 - (optional) Path to file containing prompt input
 # $5 - (optional) Path to file containing custom_review_instructions input
 # $6 - (optional) Output file path (default: /tmp/prompt.md)
+# $7 - (optional) Path to the diff file
 
 set -euo pipefail
 
@@ -25,6 +26,7 @@ main() {
   local -r input_prompt="${4:-}"
   local -r input_custom_review_instructions="${5:-}"
   local -r outfile="${6:-/tmp/prompt.md}"
+  local -r diff_file="${7:-}"
 
   # If 'input_prompt_file' is provided, use its contents
   if [ -n "${input_prompt_file}" ]; then
@@ -61,6 +63,11 @@ main() {
   else
     echo "No prompt provided; using default"
 
+    if [[ ! "${diff_file}" =~ ^${RUNNER_TEMP}/diff-[a-zA-Z0-9]{10}$ ]]; then
+      echo "ERROR: Invalid diff file path: ${diff_file}"
+      exit 1
+    fi
+
     local -r prompt_template="${action_root}/templates/prompt.md.tmpl"
     if [ ! -f "${prompt_template}" ]; then
       echo "Error: Prompt template not found at expected path."
@@ -81,7 +88,8 @@ main() {
     # Render the prompt template with envsubst
     env -i \
       CUSTOM_REVIEW_INSTRUCTIONS="${custom_review_instructions}" \
-      envsubst '$CUSTOM_REVIEW_INSTRUCTIONS' < "${prompt_template}" > "${outfile}"
+      DIFF_FILE="${diff_file}" \
+      envsubst '$CUSTOM_REVIEW_INSTRUCTIONS $DIFF_FILE' < "${prompt_template}" > "${outfile}"
   fi
 }
 

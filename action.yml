@@ -69,32 +69,43 @@ runs:
         exit 1
       fi
 
+  - name: Get diff
+    id: get-diff
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: "${{ github.event.issue.number || github.event.pull_request.number }}"
+      GH_REPO: ${{ github.repository }}
+    run: ${GITHUB_ACTION_PATH}/scripts/diff.sh
+
   - name: Create Claude Prompt
     id: claude_prompt
     shell: bash
+    env:
+      DIFF_FILE: ${{ steps.get-diff.outputs.DIFF_FILE }}
+      INPUT_FILE: ${{ inputs.prompt_file }}
+      INPUT_PROMPT: ${{ inputs.prompt }}
+      INPUT_CUSTOM_REVIEW_INSTRUCTIONS: ${{ inputs.custom_review_instructions }}
     run: |
       set -euo pipefail
 
       # Write specific inputs to files to avoid escaping issues with shell arguments
-      if [ -n "${{ inputs.prompt }}" ]; then
-        cat > /tmp/inputs_prompt <<'EOF'
-      ${{ inputs.prompt }}
-      EOF
+      if [ -n "${INPUT_PROMPT}" ]; then
+        printf '%s\n' "${INPUT_PROMPT}" > /tmp/inputs_prompt
       fi
-      if [ -n "${{ inputs.custom_review_instructions }}" ]; then
-        cat > /tmp/inputs_custom_review_instructions <<'EOF'
-      ${{ inputs.custom_review_instructions }}
-      EOF
+      if [ -n "${INPUT_CUSTOM_REVIEW_INSTRUCTIONS}" ]; then
+        printf '%s\n' "${INPUT_CUSTOM_REVIEW_INSTRUCTIONS}" > /tmp/inputs_custom_review_instructions
       fi
 
       # Render prompt and store it in /tmp/prompt.md
       "${GITHUB_ACTION_PATH}/scripts/create-prompt.sh" \
         "${GITHUB_WORKSPACE}" \
         "${GITHUB_ACTION_PATH}" \
-        "${{ inputs.prompt_file }}" \
+        "${INPUT_FILE}" \
         "/tmp/inputs_prompt" \
         "/tmp/inputs_custom_review_instructions" \
-        "/tmp/prompt.md"
+        "/tmp/prompt.md" \
+        "${DIFF_FILE}"
 
       # Write the final prompt to GitHub Outputs using the multi-line syntax
       {
@@ -102,14 +113,6 @@ runs:
         cat /tmp/prompt.md
         echo EOF
       } >> $GITHUB_OUTPUT
-
-  - name: Get diff
-    shell: bash
-    env:
-      GH_TOKEN: ${{ github.token }}
-      PR_NUMBER: "${{ github.event.issue.number || github.event.pull_request.number }}"
-      GH_REPO: ${{ github.repository }}
-    run: ${GITHUB_ACTION_PATH}/scripts/diff.sh
 
   - name: Hide Previous Reviews
     shell: bash
@@ -164,7 +167,7 @@ runs:
           Bash(git rm:*),
           Bash(git log:*),
           Bash(ls:*),
-          Bash(cat diff.txt),
+          Bash(cat ${{ steps.get-diff.outputs.DIFF_FILE }}),
           Edit,
           MultiEdit,
           Glob,

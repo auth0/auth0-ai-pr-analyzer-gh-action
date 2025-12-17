@@ -84,10 +84,9 @@ jobs:
     with:
       prompt: |
         Review this PR for data model changes:
-        1. Run Bash(cat diff.txt)
-        2. Focus on protobuf schema compatibility
-        3. Check for breaking changes
-        4. Use mcp__github_inline_comment__create_inline_comment for feedback
+        1. Focus on protobuf schema compatibility
+        2. Check for breaking changes
+        3. Use mcp__github_inline_comment__create_inline_comment for feedback
 ```
 
 **Priority:** If both `prompt_file` and `prompt` are set, `prompt_file` takes priority.
