@@ -34,4 +34,5 @@ jobs:
       - name: Run Claude Code PR Review
         uses: auth0/auth0-ai-pr-analyzer-gh-action@dev
         with:
+          aws_role_arn: ${{ vars.AWS_BEDROCK_ROLE_ARN }}
           trigger_phrase: 'claudev'

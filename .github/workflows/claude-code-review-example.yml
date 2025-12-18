@@ -31,3 +31,5 @@ jobs:
           fetch-depth: 0
       - name: Run Claude Code PR Review
         uses: ./
+        with:
+          aws_role_arn: ${{ vars.AWS_BEDROCK_ROLE_ARN }}

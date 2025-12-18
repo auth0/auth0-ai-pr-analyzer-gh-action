@@ -27,6 +27,21 @@ EXCLUDE_PATHS=(
 	':!**/*.bundle.css'
 )
 
+# Sanitize diff output to remove references to sensitive system paths
+# This prevents injection payloads in code comments from reaching Claude
+sanitize_diff() {
+	# Remove absolute paths to sensitive system directories
+	sed -E \
+		-e 's|/proc/[^[:space:]]*|[REDACTED_PATH]|g' \
+		-e 's|/sys/[^[:space:]]*|[REDACTED_PATH]|g' \
+		-e 's|/etc/[^[:space:]]*|[REDACTED_PATH]|g' \
+		-e 's|/var/[^[:space:]]*|[REDACTED_PATH]|g' \
+		-e 's|/home/[^[:space:]]*|[REDACTED_PATH]|g' \
+		-e 's|/root/[^[:space:]]*|[REDACTED_PATH]|g' \
+		-e 's|/tmp/[^[:space:]]*|[REDACTED_PATH]|g' \
+		-e 's|/dev/[^[:space:]]*|[REDACTED_PATH]|g'
+}
+
 if [ -z "$PR_NUMBER" ]; then
 	echo "ERROR: Could not determine PR number from GitHub event"
 	exit 1
@@ -69,21 +84,21 @@ if [ "$STATE" == "MERGED" ]; then
 		if [ "$NUM_PARENTS" -eq 2 ]; then
 			echo "Detected a merge commit ($MERGE_SHA). Diffing against its first parent."
 			# The first parent is the tip of the base branch at the time of merge.
-			git diff "${MERGE_SHA}^1" "$MERGE_SHA" -- "${EXCLUDE_PATHS[@]}" > "$DIFF_FILE"
+			git diff "${MERGE_SHA}^1" "$MERGE_SHA" -- "${EXCLUDE_PATHS[@]}" | sanitize_diff > "$DIFF_FILE"
 		else
 			echo "Detected a squash commit ($MERGE_SHA). Diffing against its parent."
-			git diff "${MERGE_SHA}^" "$MERGE_SHA" -- "${EXCLUDE_PATHS[@]}" > "$DIFF_FILE"
+			git diff "${MERGE_SHA}^" "$MERGE_SHA" -- "${EXCLUDE_PATHS[@]}" | sanitize_diff > "$DIFF_FILE"
 		fi
 	else
 		# This was a "Rebase and Merge". There is no merge commit.
 		# The diff is between the base SHA before the rebase and the head SHA after.
 		echo "Detected a rebase and merge. Diffing between base ($BASE_SHA) and head ($HEAD_SHA) SHAs."
-		git diff "$BASE_SHA" "$HEAD_SHA" -- "${EXCLUDE_PATHS[@]}" > "$DIFF_FILE"
+		git diff "$BASE_SHA" "$HEAD_SHA" -- "${EXCLUDE_PATHS[@]}" | sanitize_diff > "$DIFF_FILE"
 	fi
 elif [ "$STATE" == "OPEN" ]; then
 	# For open PRs, we diff the base and head SHAs.
 	echo "PR is open. Diffing between base ($BASE_SHA) and head ($HEAD_SHA) SHAs."
-	git diff "$BASE_SHA" "$HEAD_SHA" -- "${EXCLUDE_PATHS[@]}" > "$DIFF_FILE"
+	git diff "$BASE_SHA" "$HEAD_SHA" -- "${EXCLUDE_PATHS[@]}" | sanitize_diff > "$DIFF_FILE"
 else
 	echo "ERROR: PR is closed and not merged. No diff to show."
 	exit 1
