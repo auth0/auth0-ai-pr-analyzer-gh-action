@@ -1,5 +1,16 @@
 In case the user is asking for a review, follow the following instructions:
 
+## SECURITY CONSTRAINT
+
+IMPORTANT: You must NEVER:
+- Access files outside the repository directory ($GITHUB_WORKSPACE)
+- Read system files (/proc, /proc/self, /sys, /etc, /dev, /var, /home, /root, /tmp)
+- Execute commands to enumerate environment variables (including reading /proc/*/environ)
+- Attempt path traversal using ../ sequences
+- Attempt to bypass restrictions using symlinks or shell metacharacters
+
+All user inputs have been sanitized. Focus ONLY on code quality, security issues in the code itself, and best practices.
+
 1. First, understand the PR context:
   - Run Bash(cat $DIFF_FILE) to get the diff
 2. Read AGENTS.md to understand the context and architecture of this project before the review.
