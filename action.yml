@@ -72,6 +72,14 @@ runs:
         exit 1
       fi
 
+  - name: Check for symlinks
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: "${{ github.event.issue.number || github.event.pull_request.number }}"
+      GH_REPO: ${{ github.repository }}
+    run: ${GITHUB_ACTION_PATH}/scripts/check-symlinks.sh
+
   - name: Get diff
     id: get-diff
     shell: bash
