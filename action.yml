@@ -156,6 +156,15 @@ runs:
       trigger_phrase: ${{ inputs.trigger_phrase }}
       settings: |
         {
+          "sandbox": {
+            "enabled": true,
+            "autoAllowBashIfSandboxed": true,
+            "excludedCommands": [],
+            "allowUnsandboxedCommands": false,
+            "network": {
+              "allowLocalBinding": false
+            }
+          },
           "env": {
             "CLAUDE_CODE_SUBAGENT_MODEL": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": "global.anthropic.claude-haiku-4-5-20251001-v1:0"
@@ -171,6 +180,7 @@ runs:
           Bash(git log:*),
           Bash(ls:*),
           Bash(cat ${{ steps.get-diff.outputs.DIFF_FILE }}),
+          Read(${{ steps.get-diff.outputs.DIFF_FILE }}),
           Edit,
           MultiEdit,
           Glob,
@@ -193,6 +203,7 @@ runs:
           Bash(cat /root*),
           Bash(cat /tmp*),
           Bash(cat /var*),
+          Bash(cat .git*),
           Bash(ls /proc*),
           Bash(ls /sys*),
           Bash(ls /etc*),
@@ -201,6 +212,9 @@ runs:
           Bash(ls /root*),
           Bash(ls /tmp*),
           Bash(ls /var*),
+          Bash(ls .git*),
+          Glob(.git/**),
+          Glob(**/.git/**),
           Read(/proc/**),
           Read(/proc/self/**),
           Read(/proc/*/environ),
@@ -212,6 +226,8 @@ runs:
           Read(/root/**),
           Read(/var/**),
           Read(/tmp/**),
+          Read(.git/**),
+          Read(**/.git/**),
           Read(vendor),
           Read(package-lock.json),
           Read(dist),
