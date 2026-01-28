@@ -18,10 +18,6 @@ inputs:
     description: 'Optional file that contains the prompt to use for the review. This takes priority over "prompt".'
     required: false
     default: ''
-  allowed_tools:
-    description: 'Comma-separated list of tools to allow during the review'
-    required: false
-    default: ''
   disallowed_tools:
     description: 'Comma-separated list of tools to disallow during the review'
     required: false
@@ -156,7 +152,7 @@ runs:
       aws-region: us-east-1
 
   - name: Trigger Claude Code
-    uses: anthropics/claude-code-action@9db20ef677c726762b864933147219a688175107  # Claude Code 2.0.46
+    uses: anthropics/claude-code-action@fe72061e16b21385cdd53bf2ce3fef01aac24e22  # Claude Code v2.1.20
     with:
       use_bedrock: 'true'
       track_progress: 'true'
@@ -179,37 +175,23 @@ runs:
           }
         }
       claude_args: |
-        --model global.anthropic.claude-sonnet-4-5-20250929-v1:0
-        --allowedTools "Bash(git add:*),
-          Bash(git commit -m*),
-          Bash(git commit --message*),
-          Bash(git commit:*),
-          Bash(git push:*),
-          Bash(git status:*),
-          Bash(git rm:*),
+        --model global.anthropic.claude-opus-4-5-20251101-v1:0
+        --add-dir ${{ steps.get-diff.outputs.DIFF_DIR }}
+        --allowedTools "Bash(git status:*),
           Bash(git log:*),
           Bash(ls:*),
+          Bash(printf:*),
           Bash(cat ${{ steps.get-diff.outputs.DIFF_FILE }}),
-          Read(${{ steps.get-diff.outputs.DIFF_FILE }}),
-          Edit,
-          MultiEdit,
           Glob,
           Grep,
           LS,
           Read,
-          Write,
-          ${{ inputs.allowed_tools != '' && format('{0},', inputs.allowed_tools) || '' }}
-          mcp__github_inline_comment__create_inline_comment"
+          mcp__github_inline_comment"
         --disallowedTools "Bash(git diff:*),
-          Bash(git pr diff:*),
-          Bash(git commit -F*),
-          Bash(git commit --file*),
-          Bash(git commit -t*),
-          Bash(git commit --template*),
-          Bash(git commit -c*),
-          Bash(git commit --reuse-message*),
-          Bash(git commit -C*),
-          Bash(git commit --reedit-message*),
+          Bash(gh pr diff:*),
+          Bash(git commit:*),
+          Bash(git reset:*),
+          Bash(git clone:*),
           Bash(env:*),
           Bash(printenv:*),
           Bash(export:*),
@@ -246,45 +228,9 @@ runs:
           Read(/tmp/**),
           Read(.git/**),
           Read(**/.git/**),
-          Edit(/proc/**),
-          Edit(/proc/self/**),
-          Edit(/proc/*/environ),
-          Edit(/proc/[0-9]*/**),
-          Edit(/sys/**),
-          Edit(/etc/**),
-          Edit(/dev/**),
-          Edit(/home/**),
-          Edit(/root/**),
-          Edit(/var/**),
-          Edit(/tmp/**),
-          Edit(.git/**),
-          Edit(**/.git/**),
-          MultiEdit(/proc/**),
-          MultiEdit(/proc/self/**),
-          MultiEdit(/proc/*/environ),
-          MultiEdit(/proc/[0-9]*/**),
-          MultiEdit(/sys/**),
-          MultiEdit(/etc/**),
-          MultiEdit(/dev/**),
-          MultiEdit(/home/**),
-          MultiEdit(/root/**),
-          MultiEdit(/var/**),
-          MultiEdit(/tmp/**),
-          MultiEdit(.git/**),
-          MultiEdit(**/.git/**),
-          Write(/proc/**),
-          Write(/proc/self/**),
-          Write(/proc/*/environ),
-          Write(/proc/[0-9]*/**),
-          Write(/sys/**),
-          Write(/etc/**),
-          Write(/dev/**),
-          Write(/home/**),
-          Write(/root/**),
-          Write(/var/**),
-          Write(/tmp/**),
-          Write(.git/**),
-          Write(**/.git/**),
+          Edit,
+          MultiEdit,
+          Write,
           Read(vendor),
           Read(package-lock.json),
           Read(dist),

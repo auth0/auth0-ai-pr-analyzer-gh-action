@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Generate a unique filename for the diff output
 DIFF_FILE=$(mktemp "${RUNNER_TEMP}/diff-XXXXXXXXXX")
+echo "DIFF_DIR=${RUNNER_TEMP}" >> "$GITHUB_OUTPUT"
 echo "DIFF_FILE=$DIFF_FILE" >> "$GITHUB_OUTPUT"
 
 EXCLUDE_PATHS=(
