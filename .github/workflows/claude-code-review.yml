@@ -36,9 +36,8 @@ on:
 jobs:
   claude-review:
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
-      issues: write
       id-token: write # Required for OIDC authentication with AWS
     # these if statements should be in sync with claude-code-review-example.yaml
     if: |

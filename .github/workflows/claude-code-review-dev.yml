@@ -14,9 +14,8 @@ jobs:
   claude-review:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
-      issues: write
       id-token: write # Required for OIDC authentication with AWS
     # Test workflow triggered by claudev instead of @claude
     if: |
