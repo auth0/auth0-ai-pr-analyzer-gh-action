@@ -33,25 +33,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-  - name: Validate caller workflow
-    shell: bash
-    run: |
-      set -euo pipefail
-
-      WORKFLOW_REF="${{ github.workflow_ref }}"
-
-      # Check if called from authorized workflows in auth0 or openfga orgs
-      if [[ "$WORKFLOW_REF" == *"auth0/ai-pr-analyzer-gh-action/.github/workflows/"* ]]; then
-        echo "Authorized workflow detected: $WORKFLOW_REF"
-        exit 0
-      fi
-
-      echo "::error::This action must be called via the official reusable workflow."
-      echo "::error::Use: uses: auth0/ai-pr-analyzer-gh-action/.github/workflows/claude-code-review.yml@main"
-      echo ""
-      echo "Detected workflow_ref: $WORKFLOW_REF"
-      exit 1
-
   - name: Get PR info for fork support
     if: github.event.issue.pull_request
     id: pr-info
@@ -218,6 +199,7 @@ runs:
           Bash(cat /sys*),
           Bash(cat /etc*),
           Bash(cat /dev*),
+          Bash(cat /home*),
           Bash(cat /root*),
           Bash(cat /tmp*),
           Bash(cat /var*),
