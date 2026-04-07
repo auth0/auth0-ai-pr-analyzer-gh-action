@@ -1,3 +1,5 @@
+TEST CODE 12345
+
 # AI PR Analyzer GitHub Action
 
 A GitHub Actions workflow that provides AI-powered code reviews using Claude via Amazon Bedrock. Automatically analyze pull requests and provide intelligent feedback when triggered by mentioning `@claude` in PR comments or descriptions.
